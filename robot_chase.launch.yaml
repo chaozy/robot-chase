@@ -1,0 +1,45 @@
+launch:
+- group:
+  - push-ros-namespace:
+      namespace: "blue"
+  - node:
+      pkg:        "robot_chase"
+      exec:       "cpp_executable"
+      output:     "screen"
+      param:
+      - { name:   "robot_num_range",      value:  [0, 1] }
+      - { name:   "max_linear_velocity",  value: 2.0 }
+      - { name:   "team_color",           value:  [.5, .0, .0] }
+      - { name:   "team_id",              value:  1 }
+      - { name:   "sim_rate",             value:  50.0 }
+      - { name:   "topic_rate",           value:  30.0 }
+      - { name:   "enable_collisions",    value:  false }
+
+  - node:
+      pkg:    "robot_chase"
+      exec:   "blue_vel_node.py"
+      output: "screen"
+      param:
+        - {name:  "num_of_robot",         value: 2}
+
+- group:
+  - push-ros-namespace:
+      namespace: "red"
+  - node:
+      pkg:        "robot_chase"
+      exec:       "cpp_executable"
+      output:     "screen"
+      param:
+      - { name:   "robot_num_range",      value:  [2,3] }
+      - { name:   "max_linear_velocity",  value: 1.0 }
+      - { name:   "team_color",           value:  [0., .0, 1.] }
+      - { name:   "team_id",              value:  2 }
+      - { name:   "sim_rate",             value:  50.0 }
+      - { name:   "topic_rate",           value:  30.0 }
+      - { name:   "enable_collisions",    value:  false }
+  - node:
+      pkg:    "robot_chase"
+      exec:   "red_vel_node.py"
+      output: "screen"
+      param:
+        - {name:  "num_of_robot",         value: 2}

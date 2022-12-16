@@ -41,13 +41,31 @@ include_directories(/opt/ros/humble/include/tf2_msgs)
 include_directories(/opt/ros/humble/include/visualization_msgs)
 include_directories(/opt/ros/humble/include/sensor_msgs)
 
-add_executable(cpp_executable src/freyja_simulator_node.cpp)
+add_executable(cpp_executable src/simulator_node.cpp)
 target_include_directories(cpp_executable PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_compile_features(cpp_executable PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 ament_target_dependencies(
   cpp_executable
+  "rclcpp"
+  "Eigen3"
+  "geometry_msgs"
+  "tf2"
+  "tf2_ros"
+  "nav_msgs"
+  "std_msgs"
+  "sensor_msgs"
+  "visualization_msgs"
+)
+
+add_executable(police src/police_node.cpp)
+target_include_directories(police PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(police PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+ament_target_dependencies(
+  police
   "rclcpp"
   "Eigen3"
   "geometry_msgs"
@@ -69,12 +87,22 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(TARGETS
+  police
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install Python modules
 ament_python_install_package(${PROJECT_NAME})
 
 # Install Python executables
 install(PROGRAMS
-  scripts/robot_vel_node.py
+  scripts/blue_vel_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  scripts/red_vel_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
