@@ -20,6 +20,7 @@ from launch_ros.actions import Node as nd
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from scipy.optimize import linear_sum_assignment
 
 
 X = 0
@@ -42,6 +43,9 @@ def linearized_feedback(pose, velocity):
     u = float(vp_x * np.cos(theta) + vp_y * np.sin(theta))
     w = float(epsilon ** -1 * (-vp_x * np.sin(theta) + vp_y * np.cos(theta)))
     return u, w
+
+def get_dist(red, blue):
+    return np.linalg.norm(red.pose[:2] - blue.pose[:2])
 
 class Robot():
     def __init__(self, id):
@@ -95,14 +99,16 @@ class RedbotDriver(Node):
             self._subscribers_blue[idx] = self.create_subscription(Odometry, sname, self._blues[idx].update_pose, 1)
             
             
-            
         self.timer = self.create_timer(1,  self.robot_chase_timer)
             
     
     def robot_chase_timer(self):
+        red_idxes, blue_idxes = self.work_allocation()
 
         for idx in range(self.num_of_robots):
-            velocity = get_relative_pose(self._reds[idx].pose, self._blues[idx].pose)
+            red_idx, blue_idx = red_idxes[idx], blue_idxes[idx]
+            self._logger.info(str(red_idx + self.num_of_robots) + " chasing " + str(blue_idx))
+            velocity = get_relative_pose(self._reds[red_idx].pose, self._blues[blue_idx].pose)
             u, w = linearized_feedback(np.array([0, 0, 0]), velocity=velocity[:2])
     
             vel_msg = Twist()
@@ -110,7 +116,18 @@ class RedbotDriver(Node):
             vel_msg.angular.z = w
             self._publishers[idx].publish(vel_msg)
         return
-
+    
+    def work_allocation(self):
+        # Compute the cost matrix which contains distance between each pair of robots in the two teams
+        cost_m = np.zeros((self.num_of_robots, self.num_of_robots))
+        for i in range(self.num_of_robots):
+            for j in range(self.num_of_robots):
+                
+                distance = get_dist(self._reds[i], self._blues[j])
+                cost_m[i][j] = cost_m[j][i] = distance
+        
+        # Huangarian Bipartie allocation
+        return linear_sum_assignment(cost_matrix=cost_m)
 
 
 def run(args):
