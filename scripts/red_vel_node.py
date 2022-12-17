@@ -73,9 +73,9 @@ class RedbotDriver(Node):
         
         self.num_of_robots = int(self.get_parameter('num_of_robot').value)
         
-        self._publishers = []
-        self._subscribers_blue = []
-        self._subscribers_red = []
+        self._publishers = [None for _ in range(self.num_of_robots)]
+        self._subscribers_blue = [None for _ in range(self.num_of_robots)]
+        self._subscribers_red = [None for _ in range(self.num_of_robots)]
         self._reds = [Robot(i) for i in range(self.num_of_robots)]
         self._blues = [Robot(i) for i in range(self.num_of_robots)]
         
@@ -83,17 +83,16 @@ class RedbotDriver(Node):
         for idx in range(self.num_of_robots):
             red_idx = idx + self.num_of_robots
             
-            self._logger.info(str(red_idx))
-            
             pname = "/red/robot" + str(red_idx) + "/cmd_vel"
-            self._publishers.append(self.create_publisher(Twist, pname, 1))
+            self._publishers[idx] = self.create_publisher(Twist, pname, 1)
+            self._logger.info(pname)
             
             sname = "/red/robot" + str(red_idx) + "/odometry"
-            self._subscribers_red.append(self.create_subscription(Odometry, sname, self._reds[idx].update_pose, 1)) 
+            self._subscribers_red[idx] = self.create_subscription(Odometry, sname, self._reds[idx].update_pose, 1)
             
             # the qos_profile is set to 1 beacause we dont need queueing message, they are outdated
             sname = "/blue/robot" + str(idx) + "/odometry"
-            self._subscribers_blue.append(self.create_subscription(Odometry, sname, self._blues[idx].update_pose, 1))
+            self._subscribers_blue[idx] = self.create_subscription(Odometry, sname, self._blues[idx].update_pose, 1)
             
             
             

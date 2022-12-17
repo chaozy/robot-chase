@@ -7,7 +7,7 @@ launch:
       exec:       "cpp_executable"
       output:     "screen"
       param:
-      - { name:   "robot_num_range",      value:  [0, 1] }
+      - { name:   "robot_num_range",      value:  [0, 2] }
       - { name:   "max_linear_velocity",  value: 2.0 }
       - { name:   "team_color",           value:  [.5, .0, .0] }
       - { name:   "team_id",              value:  1 }
@@ -20,7 +20,7 @@ launch:
       exec:   "blue_vel_node.py"
       output: "screen"
       param:
-        - {name:  "num_of_robot",         value: 2}
+        - {name:  "num_of_robot",         value: 3}
 
 - group:
   - push-ros-namespace:
@@ -30,7 +30,7 @@ launch:
       exec:       "cpp_executable"
       output:     "screen"
       param:
-      - { name:   "robot_num_range",      value:  [2,3] }
+      - { name:   "robot_num_range",      value:  [3, 5] }
       - { name:   "max_linear_velocity",  value: 1.0 }
       - { name:   "team_color",           value:  [0., .0, 1.] }
       - { name:   "team_id",              value:  2 }
@@ -42,4 +42,4 @@ launch:
       exec:   "red_vel_node.py"
       output: "screen"
       param:
-        - {name:  "num_of_robot",         value: 2}
+        - {name:  "num_of_robot",         value: 3}
