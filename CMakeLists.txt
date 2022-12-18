@@ -59,23 +59,6 @@ ament_target_dependencies(
   "visualization_msgs"
 )
 
-add_executable(police src/police_node.cpp)
-target_include_directories(police PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(police PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
-ament_target_dependencies(
-  police
-  "rclcpp"
-  "Eigen3"
-  "geometry_msgs"
-  "tf2"
-  "tf2_ros"
-  "nav_msgs"
-  "std_msgs"
-  "sensor_msgs"
-  "visualization_msgs"
-)
 
 # # Create Cpp executable
 # add_executable(cpp_executable src/freyja_simulator_node.cpp)
@@ -84,11 +67,6 @@ ament_target_dependencies(
 # Install Cpp executables
 install(TARGETS
   cpp_executable
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(TARGETS
-  police
   DESTINATION lib/${PROJECT_NAME}
 )
 
