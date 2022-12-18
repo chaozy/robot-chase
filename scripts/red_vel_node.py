@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import time
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -75,17 +76,20 @@ class RedbotDriver(Node):
                 ('num_of_robot', 1)
             ])
         
-        self.num_of_robots = int(self.get_parameter('num_of_robot').value)
+        self.num_of_reds = int(self.get_parameter('num_of_robot').value)
+        self.num_of_blues = int(self.get_parameter('num_of_robot').value)
         
-        self._publishers = [None for _ in range(self.num_of_robots)]
-        self._subscribers_blue = [None for _ in range(self.num_of_robots)]
-        self._subscribers_red = [None for _ in range(self.num_of_robots)]
-        self._reds = [Robot(i) for i in range(self.num_of_robots)]
-        self._blues = [Robot(i) for i in range(self.num_of_robots)]
+        self._publishers = [None for _ in range(self.num_of_reds)]
+        self._subscribers_blue = [None for _ in range(self.num_of_blues)]
+        self._subscribers_red = [None for _ in range(self.num_of_reds)]
+        self._reds = [Robot(i) for i in range(self.num_of_reds)]
+        self._blues = [Robot(i) for i in range(self.num_of_blues)]
+        
+        self._catched_set = set()
         
 
-        for idx in range(self.num_of_robots):
-            red_idx = idx + self.num_of_robots
+        for idx in range(self.num_of_reds):
+            red_idx = idx + self.num_of_blues
             
             pname = "/red/robot" + str(red_idx) + "/cmd_vel"
             self._publishers[idx] = self.create_publisher(Twist, pname, 1)
@@ -98,16 +102,17 @@ class RedbotDriver(Node):
             sname = "/blue/robot" + str(idx) + "/odometry"
             self._subscribers_blue[idx] = self.create_subscription(Odometry, sname, self._blues[idx].update_pose, 1)
             
-            
-        self.timer = self.create_timer(1,  self.robot_chase_timer)
+        time.sleep(10)  
+        self.timer = self.create_timer(0.1,  self.robot_chase_timer)
             
     
     def robot_chase_timer(self):
         red_idxes, blue_idxes = self.work_allocation()
 
-        for idx in range(self.num_of_robots):
+        for idx in range(self.num_of_reds):
             red_idx, blue_idx = red_idxes[idx], blue_idxes[idx]
-            self._logger.info(str(red_idx + self.num_of_robots) + " chasing " + str(blue_idx))
+            
+            # self._logger.info(str(red_idx + self.num_of_reds) + " chasing " + str(blue_idx))
             velocity = get_relative_pose(self._reds[red_idx].pose, self._blues[blue_idx].pose)
             u, w = linearized_feedback(np.array([0, 0, 0]), velocity=velocity[:2])
     
@@ -119,15 +124,45 @@ class RedbotDriver(Node):
     
     def work_allocation(self):
         # Compute the cost matrix which contains distance between each pair of robots in the two teams
-        cost_m = np.zeros((self.num_of_robots, self.num_of_robots))
-        for i in range(self.num_of_robots):
-            for j in range(self.num_of_robots):
+        cost_m = np.zeros((self.num_of_reds, self.num_of_blues))
+        for i in range(self.num_of_reds):
+            for j in range(self.num_of_blues):
+                if j in self._catched_set:
+                    continue
                 
                 distance = get_dist(self._reds[i], self._blues[j])
+                if distance < 0.5:
+                    self.robot_catched(j)
                 cost_m[i][j] = cost_m[j][i] = distance
         
         # Huangarian Bipartie allocation
-        return linear_sum_assignment(cost_matrix=cost_m)
+        red_idxes, blue_idxes = linear_sum_assignment(cost_matrix=cost_m)
+        
+        # Find the red team robots who are assigned to the dummy(catched) blue robots, assigh them to their cloest blue robots instead
+        for idx in range(self.num_of_reds):
+            if blue_idxes[idx] in self._catched_set:
+                red_idx = red_idxes[idx]
+                non_zeros = cost_m[red_idx][np.nonzero(cost_m[red_idx])] # non-zeros distances of this red robot
+                i = np.where(cost_m[red_idx]==np.min(non_zeros))[0][0] # cloest uncatched blue robot
+                print ("DWADddddddddddddddddd: ", i)
+                blue_idxes[idx] = i
+        return red_idxes, blue_idxes
+    
+    def robot_catched(self, idx):
+        self._catched_set.add(idx)
+        # When all blue are catched, stop the simulation
+        if len(self._catched_set) == self.num_of_blues:
+            self.finish()
+        self._logger.info(str(idx) + " is catched")
+        # the catched robot remains steay
+        # vel_msg = Twist()
+        # vel_msg.linear.x = 0.
+        # vel_msg.angular.z = 0.
+        # self._publishers[idx].publish(vel_msg)
+        
+    def finish(self):
+        self._logger.info("ALL BLUE-TEAM ROBOTS ARE CATCHED")
+        rclpy.shutdown()
 
 
 def run(args):

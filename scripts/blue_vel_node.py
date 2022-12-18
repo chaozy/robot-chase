@@ -26,7 +26,6 @@ class Robot_vel(Node):
         self._publishers = []
         
 
-        
         for idx in range(num_of_robot):
             rname = "/blue/robot" + str(idx) + "/cmd_vel"
             self._logger.info("published to: " + rname)
@@ -36,7 +35,7 @@ class Robot_vel(Node):
             self._publishers[idx].publish(init_vel)
 
 
-        self.timer = self.create_timer(5, self.publish_vel)
+        self.timer = self.create_timer(2, self.publish_vel)
         self._logger.info("published")
 
 
