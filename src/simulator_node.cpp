@@ -152,7 +152,6 @@ void DiffDriveRobot::manager_process()
 
 
 
-
 /* Main simulation interface */
 
 class FreyjaSimulator : public rclcpp::Node
