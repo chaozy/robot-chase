@@ -1,0 +1,53 @@
+#VRML_SIM R2022a utf8
+WorldInfo {
+  basicTimeStep 33
+}
+Viewpoint {
+  orientation -0.21220981592522112 0.7858094641562345 0.5809220946628517 0.7639321557215966
+  position -8.801863207678249 -4.227565842465206 6.608648948734932
+}
+TurtleBot3Burger {
+  translation 0 0 0
+  rotation 0 0 1 0
+  controller "<extern>"
+  controllerArgs [
+    ""
+  ]
+  extensionSlot [
+    Solid {
+      name "imu_link"
+    }
+    GPS {
+    }
+    InertialUnit {
+      name "inertial_unit"
+    }
+    RobotisLds01 {
+      name "scan"
+    }
+  ]
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 4 4
+  wallThickness 0.15
+  wallHeight 0.5
+}
+DEF CYLINDER Solid {
+  translation 0.5 0.6 0.25
+  children [
+    Shape {
+      appearance RoughConcrete {
+      }
+      geometry DEF CYLINDER_GEOMETRY Cylinder {
+        height 0.5
+        radius 0.3
+      }
+    }
+  ]
+  boundingObject USE CYLINDER_GEOMETRY
+  name "Cylinder_1"
+}

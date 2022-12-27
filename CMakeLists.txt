@@ -84,6 +84,16 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+  scripts/webots_launch.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(PROGRAMS
+  worlds/world.wbt
+  DESTINATION share/${PROJECT_NAME}/worlds
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
