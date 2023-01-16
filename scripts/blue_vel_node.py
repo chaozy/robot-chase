@@ -11,7 +11,7 @@ from launch_ros.actions import Node as nd
 import time
 import numpy as np
 
-VELOCITY = 2.
+VELOCITY = 1.
 
 class Robot_vel(Node):
     def __init__(self, args):
@@ -32,8 +32,12 @@ class Robot_vel(Node):
             self._publishers.append(self.create_publisher(Twist, rname, 2))
             init_vel = Twist()
             init_vel.linear.x = VELOCITY
+            # init_vel.linear.x = 0
             self._publishers[idx].publish(init_vel)
 
+        # init_vel = Twist()
+        # init_vel.linear.x = 0.
+        # self._publishers[0].publish(init_vel)
 
         self.timer = self.create_timer(2, self.publish_vel)
         self._logger.info("published")

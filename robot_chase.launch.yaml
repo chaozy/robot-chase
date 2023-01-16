@@ -14,7 +14,8 @@ launch:
       - { name:   "sim_rate",             value:  50.0 }
       - { name:   "topic_rate",           value:  30.0 }
       - { name:   "enable_collisions",    value:  false }
-      - { name:   "obst_pos_list",        value:  [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -1.0] }
+    #   - { name:   "obst_pos_list",        value:  [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -1.0] }
+      - { name:   "obst_pos_list",        value:  [0.0, 0.0, 1.0, 0.0, -1.0, 0.0] }
 
   - node:
       pkg:    "robot_chase"
@@ -31,14 +32,15 @@ launch:
       exec:       "cpp_executable"
       output:     "screen"
       param:
-      - { name:   "robot_num_range",      value:  [3, 5] }
+      - { name:   "robot_num_range",      value:  [3,5] }
       - { name:   "max_linear_spd",       value: 0.5 }
       - { name:   "team_color",           value:  [.5, .0, .0] }
       - { name:   "team_id",              value:  2 }
       - { name:   "sim_rate",             value:  50.0 }
       - { name:   "topic_rate",           value:  30.0 }
       - { name:   "enable_collisions",    value:  false }
-      - { name:   "obst_pos_list",        value:  [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -1.0] }
+    #   - { name:   "obst_pos_list",        value:  [0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -1.0] }
+      - { name:   "obst_pos_list",        value:  [0.0, 0.0, 1.0, 0.0, -1.0, 0.0] }
   - node:
       pkg:    "robot_chase"
       exec:   "red_vel_node.py"

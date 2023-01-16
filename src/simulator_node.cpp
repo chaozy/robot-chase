@@ -35,17 +35,16 @@ struct DiffDriveRobot
 
   int unique_id_;
   std::string name_;
-  double MAX_LINEAR_SPD_ = 2.0;
   
   volatile bool is_ok_;
   std::atomic_flag keep_alive_;
 
   // custom robot properties
-  // const double MAX_LINEAR_SPD_=2.0;
+  const double MAX_LINEAR_SPD_=2.0;
   const double MAX_ANGULAR_SPD_=2.0;
 
   public:
-    DiffDriveRobot( int, std::string, double max_linear_spd);
+    DiffDriveRobot( int, std::string);
     // forbid copy
     DiffDriveRobot( const DiffDriveRobot& ) = delete;
     DiffDriveRobot& operator=( const DiffDriveRobot& ) = delete;
@@ -79,12 +78,11 @@ DiffDriveRobot::~DiffDriveRobot()
   terminate();
 }
 
-DiffDriveRobot::DiffDriveRobot( int _uid, std::string _n, double max_linear_spd): unique_id_(_uid), name_(std::move(_n)), MAX_LINEAR_SPD_(max_linear_spd)
+DiffDriveRobot::DiffDriveRobot( int _uid, std::string _n): unique_id_(_uid), name_(std::move(_n))
 {
   x_ = y_ = theta_ = std::nan("");
   vx_ = vy_ = omega_ = std::nan("");
   is_ok_ = false;
-  printf ("name: %s, max_speed: %f\n", name_.c_str(), MAX_LINEAR_SPD_);
 }
 void DiffDriveRobot::initialise_stopped( const double& _x, const double& _y, const double& _th )
 {
@@ -101,9 +99,9 @@ void DiffDriveRobot::initialise_stopped( const double& _x, const double& _y, con
 
 void DiffDriveRobot::setBodyVelocity( const double body_v, const double body_w )
 {
-  // printf("MAX SPEED IN THE ROBOT: %f,  body_v: %f\n", MAX_LINEAR_SPD_, body_v);
   bv_ = std::min( MAX_LINEAR_SPD_, std::max(-MAX_LINEAR_SPD_, body_v) );
   bw_ = std::min( MAX_ANGULAR_SPD_, std::max(-MAX_ANGULAR_SPD_, body_w) );
+  // printf("ROBOT name: %s, bo_v: %f\n", name_.c_str(),  bv_);
 }
 
 void DiffDriveRobot::move( const double& dt )
@@ -159,7 +157,6 @@ class FreyjaSimulator : public rclcpp::Node
   int num_robots_;
   std::vector<long int> robot_num_range_;
   double WALL_LIMIT;
-  double max_linear_spd;
   
   double sim_step_;
   double topic_step_;
@@ -203,7 +200,6 @@ FreyjaSimulator::FreyjaSimulator() : Node( "freyja_sim" )
 {
   double refresh_rate, topic_rate;
   declare_parameter<std::vector<long int>>( "robot_num_range", std::vector<long int>({0, 4}) );
-  declare_parameter<double>( "max_linear_spd", 2.0);
   declare_parameter<double>("sim_rate", 50.0);
   declare_parameter<double>("topic_rate", 30.0);
   declare_parameter<std::vector<double>>( "team_color", std::vector<double>({1.0, 0.0, 0.0}) );
@@ -215,7 +211,6 @@ FreyjaSimulator::FreyjaSimulator() : Node( "freyja_sim" )
   get_parameter( "sim_rate", refresh_rate );
   get_parameter( "topic_rate", topic_rate );
   get_parameter( "enable_collisions", enable_collisions_ );
-  get_parameter( "max_linear_spd", max_linear_spd);
   get_parameter( "obst_pos_list", obst_pos_list_ );
   WALL_LIMIT = 2.0;
 
@@ -270,7 +265,8 @@ void FreyjaSimulator::create_robots()
     int uid = uid_dist(rand_engine);
     std::string rname = "robot" + std::to_string(r);
     // printf("MAX_LINEAR_SPD_: %f\n", max_linear_spd);
-    robots_.emplace_back( uid, rname, max_linear_spd);
+    // std::cout << "rname: " + rname + " max_spd: " + std::to_string(max_linear_spd) << std::endl;
+    robots_.emplace_back( uid, rname );
     robots_[idx].initialise_stopped( x, y, th );
 
     // create subscriber

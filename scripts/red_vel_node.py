@@ -26,15 +26,15 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from scipy.optimize import linear_sum_assignment
 
-from potential_field import get_velocity
+from potential_field import get_velocity, plot_field
 
 
 X = 0
 Y = 1
 YAW = 2
 
-MAX_LINEAR_SPD_RED = 1.
-NUM_OF_OBST = 5
+MAX_LINEAR_SPD_RED = .5
+NUM_OF_OBST = 3
 
 
 
@@ -140,6 +140,8 @@ class RedbotDriver(Node):
     
     def robot_chase_timer(self):
         red_idxes, blue_idxes = self.work_allocation()
+        # plot_field(self._reds[0].pose, self._blues[0].pose, self._obsts, MAX_LINEAR_SPD_RED)
+        # dwasdaw
 
         for idx in range(self.num_of_reds):
             red_idx, blue_idx = red_idxes[idx], blue_idxes[idx]
@@ -151,10 +153,14 @@ class RedbotDriver(Node):
             
             velocity = get_velocity(self._reds[red_idx].pose, catched_point, self._obsts, MAX_LINEAR_SPD_RED)
             u, w = linearized_feedback(np.array([0, 0, 0]), velocity=velocity[:2])
-    
+            # always move in the maximum speed
+            if u < 0:
+                u = -MAX_LINEAR_SPD_RED
+            else:
+                u = MAX_LINEAR_SPD_RED
+            
             vel_msg = Twist()
             vel_msg.linear.x = u
-            # vel_msg.linear.x = MAX_LINEAR_SPD_RED # move in the maximum speed
             vel_msg.angular.z = w
             self._publishers[idx].publish(vel_msg)
         return
@@ -176,6 +182,7 @@ class RedbotDriver(Node):
         catched_pose = blue.pose[:2]
         catched_pose[X] += x1 * t
         catched_pose[Y] += y1 * t
+        # self._logger.info(str(catched_pose[X]) + " - " + str(catched_pose[Y]))
         return catched_pose
         
         
@@ -188,19 +195,20 @@ class RedbotDriver(Node):
                     continue
                 
                 distance = get_dist(self._reds[i], self._blues[j])
-                if distance < 0.2:
+                if distance < 0.4:
                     self.robot_catched(j)
                 cost_m[i][j] = cost_m[j][i] = distance
         
         # Huangarian Bipartie allocation
         red_idxes, blue_idxes = linear_sum_assignment(cost_matrix=cost_m)
         
-        # Find the red team robots who are assigned to the dummy(catched) blue robots, assigh them to their cloest blue robots instead
+        # Find the red team robots who are assigned to the dummy(catched) blue robots, 
+        # assigh them to their cloest (uncatched) blue robots instead
         for idx in range(self.num_of_reds):
             if blue_idxes[idx] in self._catched_set:
                 red_idx = red_idxes[idx]
-                non_zeros = cost_m[red_idx][np.nonzero(cost_m[red_idx])] # non-zeros distances of this red robot
-                i = np.where(cost_m[red_idx]==np.min(non_zeros))[0][0] # cloest uncatched blue robot
+                non_zeros = cost_m[red_idx][np.nonzero(cost_m[red_idx])] # non-zero distances 
+                i = np.where(cost_m[red_idx]==np.min(non_zeros))[0][0] # closest uncatched blue robot
                 blue_idxes[idx] = i
                 # self._logger.info("Idx " + str(idx) + "is catched, changed to " + str(i))
         return red_idxes, blue_idxes
